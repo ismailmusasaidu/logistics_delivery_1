@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, M
 import { Package, MapPin, Clock, Plus, X, User, Phone, ChevronDown, ChevronUp, Layers, Navigation } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Order, OrderTracking } from '@/lib/supabase';
-import { BulkOrderModal } from '@/components/BulkOrderModal';
+import BulkOrderModal from '@/components/BulkOrderModal';
 import { CheckoutModal } from '@/components/CheckoutModal';
 import { PricingBreakdown } from '@/components/PricingBreakdown';
 import { pricingCalculator, PricingBreakdown as PricingBreakdownType, Promotion } from '@/lib/pricingCalculator';

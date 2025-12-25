@@ -1,15 +1,212 @@
 import { Tabs } from 'expo-router';
-import { Package, User, LayoutDashboard, Bike, Users, DollarSign } from 'lucide-react-native';
+import { Package, User, LayoutDashboard, Bike, Users, DollarSign, Building2, FileText, CheckSquare, Clock } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCorporate } from '@/contexts/CorporateContext';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { profile } = useAuth();
+  const { isCorporateUser, isAdmin, isStaff, isFinance } = useCorporate();
   const insets = useSafeAreaInsets();
 
   if (!profile) {
     return null;
+  }
+
+  // Corporate Admin tabs
+  if (isCorporateUser && isAdmin) {
+    return (
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: '#f59e0b',
+          tabBarInactiveTintColor: '#6b7280',
+          tabBarStyle: {
+            backgroundColor: '#ffffff',
+            borderTopWidth: 1,
+            borderTopColor: '#e5e7eb',
+            height: 60 + insets.bottom,
+            paddingBottom: Math.max(insets.bottom, 8),
+            paddingTop: 8,
+          },
+        }}>
+        <Tabs.Screen
+          name="corporate-dashboard"
+          options={{
+            title: 'Dashboard',
+            tabBarIcon: ({ size, color }) => (
+              <LayoutDashboard size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="corporate-approvals"
+          options={{
+            title: 'Approvals',
+            tabBarIcon: ({ size, color }) => (
+              <CheckSquare size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="corporate-deliveries"
+          options={{
+            title: 'Deliveries',
+            tabBarIcon: ({ size, color }) => (
+              <Package size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="corporate-reports"
+          options={{
+            title: 'Reports',
+            tabBarIcon: ({ size, color }) => (
+              <FileText size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="corporate-settings"
+          options={{
+            title: 'Settings',
+            tabBarIcon: ({ size, color }) => (
+              <Building2 size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen name="customer-home" options={{ href: null }} />
+        <Tabs.Screen name="customer-profile" options={{ href: null }} />
+        <Tabs.Screen name="rider-home" options={{ href: null }} />
+        <Tabs.Screen name="rider-profile" options={{ href: null }} />
+        <Tabs.Screen name="admin-dashboard" options={{ href: null }} />
+        <Tabs.Screen name="admin-orders" options={{ href: null }} />
+        <Tabs.Screen name="admin-riders" options={{ href: null }} />
+        <Tabs.Screen name="admin-users" options={{ href: null }} />
+        <Tabs.Screen name="admin-pricing" options={{ href: null }} />
+      </Tabs>
+    );
+  }
+
+  // Corporate Staff tabs
+  if (isCorporateUser && isStaff) {
+    return (
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: '#f59e0b',
+          tabBarInactiveTintColor: '#6b7280',
+          tabBarStyle: {
+            backgroundColor: '#ffffff',
+            borderTopWidth: 1,
+            borderTopColor: '#e5e7eb',
+            height: 60 + insets.bottom,
+            paddingBottom: Math.max(insets.bottom, 8),
+            paddingTop: 8,
+          },
+        }}>
+        <Tabs.Screen
+          name="corporate-deliveries"
+          options={{
+            title: 'Deliveries',
+            tabBarIcon: ({ size, color }) => (
+              <Package size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="corporate-schedule"
+          options={{
+            title: 'Schedule',
+            tabBarIcon: ({ size, color }) => (
+              <Clock size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="customer-profile"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ size, color }) => (
+              <User size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen name="corporate-dashboard" options={{ href: null }} />
+        <Tabs.Screen name="corporate-approvals" options={{ href: null }} />
+        <Tabs.Screen name="corporate-reports" options={{ href: null }} />
+        <Tabs.Screen name="corporate-settings" options={{ href: null }} />
+        <Tabs.Screen name="customer-home" options={{ href: null }} />
+        <Tabs.Screen name="rider-home" options={{ href: null }} />
+        <Tabs.Screen name="rider-profile" options={{ href: null }} />
+        <Tabs.Screen name="admin-dashboard" options={{ href: null }} />
+        <Tabs.Screen name="admin-orders" options={{ href: null }} />
+        <Tabs.Screen name="admin-riders" options={{ href: null }} />
+        <Tabs.Screen name="admin-users" options={{ href: null }} />
+        <Tabs.Screen name="admin-pricing" options={{ href: null }} />
+      </Tabs>
+    );
+  }
+
+  // Corporate Finance tabs (read-only)
+  if (isCorporateUser && isFinance) {
+    return (
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: '#f59e0b',
+          tabBarInactiveTintColor: '#6b7280',
+          tabBarStyle: {
+            backgroundColor: '#ffffff',
+            borderTopWidth: 1,
+            borderTopColor: '#e5e7eb',
+            height: 60 + insets.bottom,
+            paddingBottom: Math.max(insets.bottom, 8),
+            paddingTop: 8,
+          },
+        }}>
+        <Tabs.Screen
+          name="corporate-reports"
+          options={{
+            title: 'Reports',
+            tabBarIcon: ({ size, color }) => (
+              <FileText size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="corporate-deliveries"
+          options={{
+            title: 'Deliveries',
+            tabBarIcon: ({ size, color }) => (
+              <Package size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="customer-profile"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ size, color }) => (
+              <User size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen name="corporate-dashboard" options={{ href: null }} />
+        <Tabs.Screen name="corporate-approvals" options={{ href: null }} />
+        <Tabs.Screen name="corporate-settings" options={{ href: null }} />
+        <Tabs.Screen name="corporate-schedule" options={{ href: null }} />
+        <Tabs.Screen name="customer-home" options={{ href: null }} />
+        <Tabs.Screen name="rider-home" options={{ href: null }} />
+        <Tabs.Screen name="rider-profile" options={{ href: null }} />
+        <Tabs.Screen name="admin-dashboard" options={{ href: null }} />
+        <Tabs.Screen name="admin-orders" options={{ href: null }} />
+        <Tabs.Screen name="admin-riders" options={{ href: null }} />
+        <Tabs.Screen name="admin-users" options={{ href: null }} />
+        <Tabs.Screen name="admin-pricing" options={{ href: null }} />
+      </Tabs>
+    );
   }
 
   if (profile.role === 'customer') {

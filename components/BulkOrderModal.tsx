@@ -14,14 +14,22 @@ type DeliveryItem = {
   notes: string;
 };
 
+type Department = {
+  id: string;
+  name: string;
+  code: string;
+};
+
 type BulkOrderModalProps = {
   visible: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  customerId: string;
+  customerId?: string;
+  companyId?: string;
+  departments?: Department[];
 };
 
-export function BulkOrderModal({ visible, onClose, onSuccess, customerId }: BulkOrderModalProps) {
+export default function BulkOrderModal({ visible, onClose, onSuccess, customerId, companyId, departments }: BulkOrderModalProps) {
   const [deliveries, setDeliveries] = useState<DeliveryItem[]>([
     {
       id: '1',
