@@ -4,6 +4,7 @@ import { User, Mail, Phone, LogOut, Edit, Save, X, Wallet, Plus, TrendingUp, Tre
 import { useAuth } from '@/contexts/AuthContext';
 import { useCorporate } from '@/contexts/CorporateContext';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { walletService, WalletTransaction } from '@/lib/wallet';
 
@@ -11,6 +12,7 @@ export default function CustomerProfile() {
   const { profile, signOut, refreshProfile } = useAuth();
   const { isCorporateUser } = useCorporate();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || '');
@@ -151,7 +153,11 @@ export default function CustomerProfile() {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) }}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Profile</Text>
         {!isEditing && (

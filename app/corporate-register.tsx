@@ -9,12 +9,14 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Building2, Mail, Phone, MapPin, CreditCard, ArrowLeft, CheckCircle } from 'lucide-react-native';
 
 export default function CorporateRegister() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -336,7 +338,7 @@ export default function CorporateRegister() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
         {step > 1 && (
           <TouchableOpacity
             style={styles.secondaryButton}
