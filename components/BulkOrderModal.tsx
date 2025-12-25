@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Platform } from 'react-native';
-import { X, Plus, Trash2, Package, MapPin, User, Phone } from 'lucide-react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Platform, ActivityIndicator } from 'react-native';
+import { X, Plus, Trash2, Package, MapPin, User, Phone, Navigation } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
+import { calculateDistanceBetweenAddresses, Coordinates } from '@/lib/geocoding';
+import { pricingCalculator } from '@/lib/pricingCalculator';
 
 type DeliveryItem = {
   id: string;
@@ -12,6 +14,13 @@ type DeliveryItem = {
   packageDescription: string;
   packageWeight: string;
   notes: string;
+  orderTypes: string[];
+  distance?: number;
+  price?: number;
+  pickupCoords?: Coordinates;
+  deliveryCoords?: Coordinates;
+  calculating?: boolean;
+  error?: string;
 };
 
 type BulkOrderModalProps = {
@@ -32,11 +41,14 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
       packageDescription: '',
       packageWeight: '',
       notes: '',
+      orderTypes: [],
     },
   ]);
   const [bulkNotes, setBulkNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const orderTypeOptions = ['Groceries', 'Medicine', 'Express Delivery'];
 
   const addDelivery = () => {
     const newId = (deliveries.length + 1).toString();
@@ -51,6 +63,7 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
         packageDescription: '',
         packageWeight: '',
         notes: '',
+        orderTypes: [],
       },
     ]);
   };
@@ -62,7 +75,93 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
   };
 
   const updateDelivery = (id: string, field: keyof DeliveryItem, value: string) => {
-    setDeliveries(deliveries.map(d => (d.id === id ? { ...d, [field]: value } : d)));
+    setDeliveries(deliveries.map(d => (d.id === id ? { ...d, [field]: value, distance: undefined, price: undefined } : d)));
+  };
+
+  const toggleOrderType = (deliveryId: string, type: string) => {
+    setDeliveries(deliveries.map(d => {
+      if (d.id === deliveryId) {
+        const types = d.orderTypes.includes(type)
+          ? d.orderTypes.filter(t => t !== type)
+          : [...d.orderTypes, type];
+        return { ...d, orderTypes: types, distance: undefined, price: undefined };
+      }
+      return d;
+    }));
+  };
+
+  useEffect(() => {
+    pricingCalculator.initialize();
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      calculateAllDistances();
+    }, 1500);
+
+    return () => clearTimeout(timeoutId);
+  }, [deliveries.map(d => `${d.pickupAddress}-${d.deliveryAddress}-${d.orderTypes.join(',')}`).join('|')]);
+
+  const calculateAllDistances = async () => {
+    const updatedDeliveries = await Promise.all(
+      deliveries.map(async (delivery) => {
+        if (!delivery.pickupAddress || !delivery.deliveryAddress) {
+          return { ...delivery, distance: undefined, price: undefined, calculating: false, error: undefined };
+        }
+
+        if (delivery.pickupAddress.length < 5 || delivery.deliveryAddress.length < 5) {
+          return delivery;
+        }
+
+        if (delivery.distance !== undefined) {
+          return delivery;
+        }
+
+        try {
+          const updated = { ...delivery, calculating: true, error: undefined };
+          setDeliveries(prev => prev.map(d => d.id === delivery.id ? updated : d));
+
+          const result = await calculateDistanceBetweenAddresses(
+            delivery.pickupAddress,
+            delivery.deliveryAddress
+          );
+
+          if (!result) {
+            return {
+              ...delivery,
+              calculating: false,
+              error: 'Unable to calculate distance',
+              distance: undefined,
+              price: undefined,
+            };
+          }
+
+          await pricingCalculator.initialize();
+          const breakdown = pricingCalculator.calculateDeliveryPrice(result.distance, delivery.orderTypes, 0, null);
+
+          return {
+            ...delivery,
+            distance: result.distance,
+            price: breakdown.finalPrice,
+            pickupCoords: result.pickupCoords,
+            deliveryCoords: result.deliveryCoords,
+            calculating: false,
+            error: undefined,
+          };
+        } catch (error: any) {
+          console.error('Error calculating distance:', error);
+          return {
+            ...delivery,
+            calculating: false,
+            error: error.message || 'Failed to calculate',
+            distance: undefined,
+            price: undefined,
+          };
+        }
+      })
+    );
+
+    setDeliveries(updatedDeliveries);
   };
 
   const calculateDiscount = (count: number): number => {
@@ -84,6 +183,16 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
         setError('Please fill in all required fields for each delivery');
         return false;
       }
+
+      if (delivery.calculating) {
+        setError('Please wait for distance calculations to complete');
+        return false;
+      }
+
+      if (!delivery.distance || !delivery.price) {
+        setError('Unable to calculate pricing. Please check addresses');
+        return false;
+      }
     }
     return true;
   };
@@ -103,8 +212,7 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
     setLoading(true);
 
     try {
-      const baseDeliveryFee = 10;
-      const totalFee = deliveries.length * baseDeliveryFee;
+      const totalFee = deliveries.reduce((sum, d) => sum + (d.price || 0), 0);
       const discountPercentage = calculateDiscount(deliveries.length);
       const finalFee = totalFee * (1 - discountPercentage / 100);
 
@@ -131,16 +239,16 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
         order_number: '',
         status: 'pending',
         pickup_address: delivery.pickupAddress,
-        pickup_lat: 0,
-        pickup_lng: 0,
+        pickup_lat: delivery.pickupCoords?.lat || 0,
+        pickup_lng: delivery.pickupCoords?.lng || 0,
         delivery_address: delivery.deliveryAddress,
-        delivery_lat: 0,
-        delivery_lng: 0,
+        delivery_lat: delivery.deliveryCoords?.lat || 0,
+        delivery_lng: delivery.deliveryCoords?.lng || 0,
         recipient_name: delivery.recipientName,
         recipient_phone: delivery.recipientPhone,
         package_description: delivery.packageDescription,
         package_weight: delivery.packageWeight ? parseFloat(delivery.packageWeight) : null,
-        delivery_fee: baseDeliveryFee,
+        delivery_fee: delivery.price || 0,
         notes: delivery.notes || null,
       }));
 
@@ -162,6 +270,7 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
           packageDescription: '',
           packageWeight: '',
           notes: '',
+          orderTypes: [],
         },
       ]);
       setBulkNotes('');
@@ -177,9 +286,10 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
 
   const totalCount = deliveries.length;
   const discount = calculateDiscount(totalCount);
-  const baseFee = 10;
-  const totalFee = totalCount * baseFee;
+  const totalFee = deliveries.reduce((sum, d) => sum + (d.price || 0), 0);
   const finalFee = totalFee * (1 - discount / 100);
+  const allCalculated = deliveries.every(d => d.price !== undefined);
+  const anyCalculating = deliveries.some(d => d.calculating);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -261,6 +371,36 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
                   </View>
                 </View>
 
+                {(delivery.pickupAddress && delivery.deliveryAddress) && (
+                  <View style={styles.distanceCard}>
+                    <View style={styles.distanceHeader}>
+                      <Navigation size={16} color="#10b981" />
+                      <Text style={styles.distanceTitle}>Distance & Pricing</Text>
+                    </View>
+                    {delivery.calculating ? (
+                      <View style={styles.calculatingContainer}>
+                        <ActivityIndicator size="small" color="#10b981" />
+                        <Text style={styles.calculatingText}>Calculating...</Text>
+                      </View>
+                    ) : delivery.error ? (
+                      <View style={styles.distanceError}>
+                        <Text style={styles.distanceErrorText}>{delivery.error}</Text>
+                      </View>
+                    ) : delivery.distance && delivery.price ? (
+                      <View style={styles.distanceValues}>
+                        <View style={styles.distanceRow}>
+                          <Text style={styles.distanceLabel}>Distance:</Text>
+                          <Text style={styles.distanceValue}>{delivery.distance} km</Text>
+                        </View>
+                        <View style={styles.distanceRow}>
+                          <Text style={styles.distanceLabel}>Price:</Text>
+                          <Text style={styles.priceValue}>₦{delivery.price.toFixed(2)}</Text>
+                        </View>
+                      </View>
+                    ) : null}
+                  </View>
+                )}
+
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Recipient Name *</Text>
                   <View style={styles.inputWithIcon}>
@@ -313,6 +453,29 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
                 </View>
 
                 <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Order Type (Optional)</Text>
+                  <View style={styles.orderTypesContainer}>
+                    {orderTypeOptions.map((type) => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.orderTypeChip,
+                          delivery.orderTypes.includes(type) && styles.orderTypeChipActive,
+                        ]}
+                        onPress={() => toggleOrderType(delivery.id, type)}>
+                        <Text
+                          style={[
+                            styles.orderTypeChipText,
+                            delivery.orderTypes.includes(type) && styles.orderTypeChipTextActive,
+                          ]}>
+                          {type}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
                   <Text style={styles.label}>Notes</Text>
                   <TextInput
                     style={[styles.inputSimple, styles.textArea]}
@@ -350,10 +513,12 @@ export default function BulkOrderModal({ visible, onClose, onSuccess, customerId
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              style={[styles.submitButton, (loading || !allCalculated || anyCalculating) && styles.submitButtonDisabled]}
               onPress={handleSubmit}
-              disabled={loading}>
-              <Text style={styles.submitButtonText}>{loading ? 'Creating...' : 'Create Bulk Order'}</Text>
+              disabled={loading || !allCalculated || anyCalculating}>
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Creating...' : anyCalculating ? 'Calculating...' : !allCalculated ? 'Enter Addresses' : 'Create Bulk Order'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -566,5 +731,90 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  distanceCard: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#d1fae5',
+  },
+  distanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  distanceTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  calculatingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  calculatingText: {
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  distanceError: {
+    backgroundColor: '#fef2f2',
+    padding: 8,
+    borderRadius: 6,
+  },
+  distanceErrorText: {
+    fontSize: 12,
+    color: '#dc2626',
+  },
+  distanceValues: {
+    gap: 6,
+  },
+  distanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  distanceLabel: {
+    fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  distanceValue: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  priceValue: {
+    fontSize: 16,
+    color: '#10b981',
+    fontWeight: '700',
+  },
+  orderTypesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  orderTypeChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#f9fafb',
+  },
+  orderTypeChipActive: {
+    backgroundColor: '#d1fae5',
+    borderColor: '#10b981',
+  },
+  orderTypeChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  orderTypeChipTextActive: {
+    color: '#10b981',
   },
 });
