@@ -2,18 +2,23 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCorporate } from '@/contexts/CorporateContext';
 
 export default function Index() {
   const { session, loading, profile } = useAuth();
+  const { isCorporateUser, loading: corporateLoading } = useCorporate();
   const router = useRouter();
 
   useEffect(() => {
-    console.log('Index: Auth state', { loading, hasSession: !!session, hasProfile: !!profile });
-    if (!loading) {
+    console.log('Index: Auth state', { loading, hasSession: !!session, hasProfile: !!profile, corporateLoading });
+    if (!loading && !corporateLoading) {
       const redirect = setTimeout(() => {
         if (session && profile) {
-          console.log('Index: Redirecting based on role:', profile.role);
-          if (profile.role === 'admin') {
+          console.log('Index: Redirecting based on role:', profile.role, 'isCorporate:', isCorporateUser);
+
+          if (isCorporateUser) {
+            router.replace('/(tabs)/corporate-dashboard' as any);
+          } else if (profile.role === 'admin') {
             router.replace('/(tabs)/admin-dashboard');
           } else if (profile.role === 'rider') {
             router.replace('/(tabs)/rider-home');
@@ -28,7 +33,7 @@ export default function Index() {
 
       return () => clearTimeout(redirect);
     }
-  }, [session, loading, profile]);
+  }, [session, loading, profile, isCorporateUser, corporateLoading]);
 
   return (
     <View style={styles.container}>

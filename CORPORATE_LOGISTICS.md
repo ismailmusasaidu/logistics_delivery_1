@@ -4,7 +4,17 @@ A comprehensive corporate logistics management system with multi-role access, ap
 
 ## Features Implemented
 
-### 1. Role-Based Access Control
+### 1. Corporate Registration
+- Self-service registration from the login screen
+- 3-step registration wizard:
+  - Company information (name, code, tax ID)
+  - Contact details (email, phone, address)
+  - Billing settings (payment terms, approval workflow)
+- User becomes first admin automatically
+- Company code must be unique
+- Optional approval requirement configuration
+
+### 2. Role-Based Access Control
 - **Corporate Admin**: Full access to company management, approvals, and settings
 - **Corporate Staff**: Can create delivery requests and view company deliveries
 - **Corporate Finance**: Read-only access to reports and delivery history
@@ -99,6 +109,18 @@ A comprehensive corporate logistics management system with multi-role access, ap
 
 ## User Workflows
 
+### New Company Registration
+1. User creates a regular account (sign up)
+2. Log in to the platform
+3. Click "Register as Corporate Client" on login screen
+4. Complete 3-step registration:
+   - Enter company name, code, and tax ID
+   - Provide contact email, phone, and address
+   - Configure billing address and payment terms
+   - Enable/disable approval workflow
+5. Become company's first admin automatically
+6. Access corporate dashboard immediately
+
 ### Corporate Admin Workflow
 1. View dashboard with company metrics
 2. Review pending delivery requests
@@ -157,8 +179,20 @@ A comprehensive corporate logistics management system with multi-role access, ap
 
 ## Usage Notes
 
+### Getting Started
+- Any user can register as a corporate client from the login screen
+- After logging in, click "Register as Corporate Client" button
+- Complete the 3-step registration wizard
+- You become the first admin of your company automatically
+
+### Company Management
 - Corporate users are separate from regular customers
-- System admins can create companies and assign admin users
-- Company admins manage their own staff
+- Company admins can invite staff members by email
+- Staff need to sign up first before they can be added to a company
+- All company data is isolated and secure
+
+### Deliveries
 - All deliveries go through the standard rider assignment system
 - Rider management is handled by system administrators
+- Corporate clients submit requests that are fulfilled by available riders
+- No direct interaction between corporate clients and riders
