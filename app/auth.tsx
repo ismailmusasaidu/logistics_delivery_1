@@ -478,22 +478,6 @@ export default function Auth() {
               <Text style={styles.switchTextBold}>{isSignUp ? 'Sign In' : 'Sign Up'}</Text>
             </Text>
           </TouchableOpacity>
-
-          {!isSignUp && (
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
-            </View>
-          )}
-
-          {!isSignUp && (
-            <TouchableOpacity
-              onPress={() => router.push('/corporate-register' as any)}
-              style={styles.corporateButton}>
-              <Text style={styles.corporateButtonText}>Register as Corporate Client</Text>
-            </TouchableOpacity>
-          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -668,34 +652,5 @@ const styles = StyleSheet.create({
     color: '#3b82f6',
     fontWeight: '500',
     lineHeight: 20,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e5e7eb',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  corporateButton: {
-    backgroundColor: '#f59e0b',
-    padding: 18,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#f59e0b',
-  },
-  corporateButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
   },
 });

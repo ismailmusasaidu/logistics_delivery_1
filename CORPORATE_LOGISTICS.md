@@ -110,16 +110,21 @@ A comprehensive corporate logistics management system with multi-role access, ap
 ## User Workflows
 
 ### New Company Registration
-1. User creates a regular account (sign up)
-2. Log in to the platform
-3. Click "Register as Corporate Client" on login screen
-4. Complete 3-step registration:
-   - Enter company name, code, and tax ID
-   - Provide contact email, phone, and address
-   - Configure billing address and payment terms
-   - Enable/disable approval workflow
-5. Become company's first admin automatically
-6. Access corporate dashboard immediately
+1. User creates a regular account (sign up with email/password)
+2. Log in to the platform as a customer
+3. Go to Profile tab
+4. Click "Register as Corporate Client" button (visible to non-corporate users)
+5. Complete 3-step registration wizard:
+   - **Step 1**: Enter company name, unique code, and tax ID
+   - **Step 2**: Provide contact email, phone, and company address
+   - **Step 3**: Configure billing address, payment terms (NET15/30/60), and approval workflow
+6. Become company's first admin automatically
+7. Get redirected to corporate dashboard immediately
+
+**Important**:
+- You must be logged in with a regular account first (with email/password)
+- The corporate registration is an upgrade to your existing account
+- Once registered as corporate, you'll see the corporate dashboard instead of the customer dashboard
 
 ### Corporate Admin Workflow
 1. View dashboard with company metrics
@@ -180,10 +185,14 @@ A comprehensive corporate logistics management system with multi-role access, ap
 ## Usage Notes
 
 ### Getting Started
-- Any user can register as a corporate client from the login screen
-- After logging in, click "Register as Corporate Client" button
-- Complete the 3-step registration wizard
-- You become the first admin of your company automatically
+1. **Sign up** for a regular account with email and password
+2. **Log in** and go to your Profile tab
+3. Click **"Register as Corporate Client"** button (visible only to non-corporate users)
+4. Complete the 3-step registration wizard
+5. You automatically become the first admin of your company
+6. Start inviting staff and creating deliveries immediately
+
+The corporate registration uses your existing login credentials (email/password), so you don't need to create a new account.
 
 ### Company Management
 - Corporate users are separate from regular customers
