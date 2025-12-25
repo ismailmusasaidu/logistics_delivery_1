@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCorporate } from '@/contexts/CorporateContext';
 import { supabase } from '@/lib/supabase';
 import { AlertCircle, ArrowLeft } from 'lucide-react-native';
 
@@ -26,15 +25,12 @@ export default function Auth() {
   const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
 
   const { signIn, signUp, session, profile } = useAuth();
-  const { isCorporateUser, loading: corporateLoading } = useCorporate();
   const router = useRouter();
 
   useEffect(() => {
-    if (session && profile && !corporateLoading) {
-      console.log('Auth: User logged in, redirecting based on role:', profile.role, 'isCorporate:', isCorporateUser);
-      if (isCorporateUser) {
-        router.replace('/(tabs)/corporate-dashboard' as any);
-      } else if (profile.role === 'admin') {
+    if (session && profile) {
+      console.log('Auth: User logged in, redirecting based on role:', profile.role);
+      if (profile.role === 'admin') {
         router.replace('/(tabs)/admin-dashboard');
       } else if (profile.role === 'rider') {
         router.replace('/(tabs)/rider-home');
@@ -42,7 +38,7 @@ export default function Auth() {
         router.replace('/(tabs)/customer-home');
       }
     }
-  }, [session, profile, isCorporateUser, corporateLoading]);
+  }, [session, profile]);
 
   const validateRiderStep1 = () => {
     if (!email || !password || !fullName || !phoneNumber || !address) {

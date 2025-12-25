@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput, ActivityIndicator, Modal } from 'react-native';
-import { User, Mail, Phone, LogOut, Edit, Save, X, Wallet, Plus, TrendingUp, TrendingDown, Building2 } from 'lucide-react-native';
+import { User, Mail, Phone, LogOut, Edit, Save, X, Wallet, Plus, TrendingUp, TrendingDown } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCorporate } from '@/contexts/CorporateContext';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
@@ -10,7 +9,6 @@ import { walletService, WalletTransaction } from '@/lib/wallet';
 
 export default function CustomerProfile() {
   const { profile, signOut, refreshProfile } = useAuth();
-  const { isCorporateUser } = useCorporate();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [isEditing, setIsEditing] = useState(false);
@@ -331,21 +329,6 @@ export default function CustomerProfile() {
               )}
             </TouchableOpacity>
           </View>
-        </View>
-      )}
-
-      {!isCorporateUser && (
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.corporateButton}
-            onPress={() => router.push('/corporate-register' as any)}
-          >
-            <Building2 size={20} color="#ffffff" />
-            <Text style={styles.corporateButtonText}>Register as Corporate Client</Text>
-          </TouchableOpacity>
-          <Text style={styles.corporateHint}>
-            Create a corporate account for your business to access bulk orders, approval workflows, and invoicing
-          </Text>
         </View>
       )}
 
@@ -827,32 +810,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#ffffff',
-  },
-  corporateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f59e0b',
-    padding: 18,
-    borderRadius: 16,
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  corporateButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  corporateHint: {
-    fontSize: 13,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginTop: 12,
-    lineHeight: 18,
-    paddingHorizontal: 8,
   },
 });
